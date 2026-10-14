@@ -1,0 +1,9 @@
+{
+  "app_name": "Jeu du petit compagnon",
+  "tagline": "Prends soin de Rumi, le chat sorcier blanc très poilu, et gagne des pièces.",
+  "description": "Jeu d'animal virtuel en français : Rumi, le chat sorcier blanc très poilu, joue dehors dans un jardin tout en couleurs avec son amie sorcière. Il faut le laver, le nourrir, lui donner à boire et le faire dormir avant que ses barres de besoins se vident (5 minutes) pour gagner des pièces. Si on néglige Rumi on perd des pièces, et la barre « pas content » fait perdre toutes ses pièces quand elle est pleine.",
+  "category": "Fun & games",
+  "pricing": "free",
+  "install_prompt": "---\n\nBefore you start: tell me in a few lines what this game does and what playing it involves, and wait for my go-ahead.\n\nPrerequisites: None.\n\nInstall \"Jeu du petit compagnon\" for me. Jeu d'animal virtuel en français : Rumi, le chat sorcier blanc très poilu, joue dehors dans un jardin tout en couleurs avec son amie sorcière. Lave-le, nourris-le, donne-lui à boire et fais-le dormir avant que ses barres de besoins se vident (5 minutes) pour gagner des pièces. La barre « pas content » fait perdre toutes ses pièces quand elle est pleine.\n\n[FINGERPRINTS]\n\n1. Le jeu se joue directement dans le navigateur : ouvre le fichier `jeu.html` du dépôt.",
+  "checkout_url": ""
+}
