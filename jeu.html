@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Jeu du petit compagnon</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap');
+    :root{
+      color-scheme:light dark;
+      --page:#fff3ba;--ink:#203d35;--muted:#536c63;--panel:#fffef8;--line:#d4d9c7;
+      --sky:#57c9ee;--sky2:#b9edff;--grass:#65c76f;--grass2:#3fa45d;--soil:#c68c50;
+      --coin:#ffd33d;--coin-ink:#855200;--danger:#e94d4b;--danger-soft:#ffd9d3;
+      --shadow:0 12px 28px rgba(41,72,54,.16);--button-shadow:0 6px 0 rgba(32,61,53,.2);
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--page:#17241f;--ink:#f4f5e9;--muted:#bccac3;--panel:#24372f;--line:#4d6259;
+        --sky:#25617b;--sky2:#357b8d;--grass:#347846;--grass2:#285f3a;--soil:#71523a;
+        --coin:#ffd65b;--coin-ink:#704600;--danger:#ff756c;--danger-soft:#5b312d;
+        --shadow:0 12px 30px rgba(0,0,0,.28);--button-shadow:0 6px 0 rgba(0,0,0,.3)}
+    }
+    *{box-sizing:border-box} html{min-height:100%;background:var(--page)}
+    body{margin:0;min-height:100%;color:var(--ink);background:var(--page);font-family:"Nunito",sans-serif;font-weight:800}
+    button{font:inherit} button:focus-visible{outline:4px solid #116da8;outline-offset:3px}
+    .game{width:min(1060px,100%);margin:auto;padding:clamp(10px,2vw,22px) clamp(10px,3vw,28px) calc(22px + env(safe-area-inset-bottom))}
+    .topline{display:flex;justify-content:space-between;gap:10px;margin-bottom:11px}
+    .counter{display:flex;align-items:center;gap:9px;min-height:46px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:7px 14px;box-shadow:var(--shadow);font:800 1.05rem "Baloo 2",sans-serif}
+    .coin{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--coin);color:var(--coin-ink);border:3px solid color-mix(in srgb,var(--coin-ink) 45%,transparent)}
+    .stage{position:relative;min-height:430px;overflow:hidden;border:3px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:26px;box-shadow:var(--shadow);background:#53764e;isolation:isolate}
+    .scene-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;filter:saturate(1.04) contrast(1.03);transition:filter .45s,transform .45s}
+    .stage:after{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(14,32,19,.05),transparent 47%,rgba(12,30,18,.12))}
+    .stage.scene-bounce .scene-photo{animation:sceneBounce .65s ease}.stage.scene-shake .scene-photo{animation:sceneShake .5s ease}.stage.scene-dirty:before{content:"";position:absolute;z-index:3;left:12%;bottom:16%;width:20%;height:22%;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(87,60,34,.33),transparent 68%);mix-blend-mode:multiply}.stage.scene-tired .scene-photo{filter:saturate(.82) brightness(.86)}.stage.scene-critical .scene-photo{filter:saturate(.58) brightness(.76)}
+    .sun{position:absolute;right:7%;top:7%;width:76px;height:76px;border-radius:50%;background:#ffe85a;box-shadow:0 0 0 14px rgba(255,232,90,.22)}
+    .stage>.sun,.stage>.cloud,.stage>.tree,.stage>.bush,.stage>.path,.stage>.flowers,.stage>.friend,.stage>.rumi-wrap{display:none}
+    .cloud,.cloud:before,.cloud:after{position:absolute;background:#fff;border-radius:999px}.cloud{left:8%;top:12%;width:100px;height:27px;opacity:.92}.cloud:before{content:"";width:45px;height:45px;left:16px;bottom:0}.cloud:after{content:"";width:53px;height:53px;right:8px;bottom:0}
+    .tree{position:absolute;right:12%;bottom:24%;width:34px;height:120px;border-radius:12px 12px 0 0;background:#87562f}.tree:before{content:"";position:absolute;width:148px;height:142px;border-radius:50%;left:50%;top:-84px;transform:translateX(-50%);background:#36a857;box-shadow:-44px 30px 0 #4fbe66,45px 24px 0 #2c974b}
+    .bush{position:absolute;left:-2%;bottom:22%;width:180px;height:78px;border-radius:55% 60% 12% 10%;background:#279b54;box-shadow:70px 12px 0 #42b864}
+    .flowers{position:absolute;left:3%;right:3%;bottom:14px;display:flex;justify-content:space-around;font-size:27px;letter-spacing:8px;filter:drop-shadow(0 3px 1px rgba(30,70,43,.18))}
+    .path{position:absolute;left:24%;right:20%;bottom:-40px;height:132px;border-radius:50% 50% 0 0;background:color-mix(in srgb,var(--soil) 78%,#fff);transform:perspective(200px) rotateX(18deg)}
+    .speech{position:absolute;z-index:8;left:50%;top:17px;transform:translateX(-50%);max-width:76%;padding:8px 14px;border-radius:18px;background:var(--panel);border:3px solid color-mix(in srgb,var(--ink) 15%,transparent);box-shadow:0 6px 0 rgba(30,50,40,.13);font:800 1rem "Baloo 2",sans-serif;text-align:center;opacity:0;pointer-events:none;transition:.2s}
+    .speech.show{opacity:1;transform:translate(-50%,3px)}
+    .speech:after{content:"";position:absolute;width:15px;height:15px;left:50%;bottom:-10px;transform:translateX(-50%) rotate(45deg);background:var(--panel);border-right:3px solid color-mix(in srgb,var(--ink) 15%,transparent);border-bottom:3px solid color-mix(in srgb,var(--ink) 15%,transparent)}
+    .rumi-wrap{position:absolute;z-index:5;width:255px;height:285px;left:47%;bottom:34px;transform:translateX(-50%);filter:drop-shadow(0 12px 8px rgba(30,48,35,.22))}
+    .rumi-wrap.bounce{animation:bounce .65s ease}.rumi-wrap.shake{animation:shake .5s ease}.rumi{width:100%;height:100%;overflow:visible}
+    .fur{fill:#fffef7;stroke:#626c7a;stroke-width:4;stroke-linejoin:round}.shade{fill:#e5eaf0}.eye{fill:#f2c230;stroke:#5d4a18;stroke-width:2}.pupil{fill:#24322d}.nose{fill:#ec9aa8}.mouth{fill:none;stroke:#263a33;stroke-width:4;stroke-linecap:round}.hat{fill:#345bbb;stroke:#213878;stroke-width:4;stroke-linejoin:round}.band{fill:#ffc83c}.star{fill:#fff18a}.dirt{fill:#73573f;opacity:0;transition:opacity .3s}.dirty .dirt{opacity:.7}.tired .pupil{transform:scaleY(.22);transform-origin:center}.critical{filter:drop-shadow(0 12px 8px rgba(30,48,35,.22)) saturate(.55)}
+    .friend{position:absolute;z-index:4;left:17%;bottom:47px;width:150px;text-align:center}.friend svg{width:110px;height:205px;overflow:visible;filter:drop-shadow(0 9px 5px rgba(30,48,35,.2))}.friend-name{display:inline-block;margin-top:-10px;padding:4px 10px;background:var(--panel);border:2px solid var(--line);border-radius:999px;font:800 .82rem "Baloo 2",sans-serif}
+    .need-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}
+    .need{min-width:0;padding:9px 10px 10px;background:var(--panel);border:2px solid var(--line);border-radius:15px}
+    .need.low{border-color:var(--danger);animation:pulse 1.1s ease-in-out infinite}.need-head{display:flex;justify-content:space-between;gap:5px;margin-bottom:5px;font-size:.82rem}.need-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.need-bar{height:12px;overflow:hidden;border-radius:999px;background:var(--line)}.need-fill{height:100%;width:100%;border-radius:inherit;background:var(--bar);transition:width .45s linear}.need.low .need-fill{background:var(--danger)}
+    .actions{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.action{position:relative;min-height:75px;border:0;border-radius:16px;padding:11px 6px 8px;background:var(--bg);color:#21372f;box-shadow:var(--button-shadow);cursor:pointer;touch-action:manipulation;transition:transform .12s,box-shadow .12s}.action:hover{transform:translateY(-2px)}.action:active{transform:translateY(5px);box-shadow:0 1px 0 rgba(32,61,53,.2)}.aicon{display:block;font-size:1.7rem;line-height:1;margin-bottom:5px}.alabel{display:block;font:800 1rem/1 "Baloo 2",sans-serif}.reward{display:block;margin-top:3px;font-size:.7rem;opacity:.76}
+    .anger{margin-top:13px;padding:10px 12px 11px;background:var(--panel);border:2px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.anger-label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 2px 5px;font-size:.87rem}.anger-label strong{font:800 1rem "Baloo 2",sans-serif}.anger-track{height:16px;overflow:hidden;border-radius:999px;background:var(--danger-soft)}.anger-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#ffc43d,#ff824c,var(--danger));transition:width .45s linear}
+    .hint{min-height:24px;margin:10px 5px 0;text-align:center;color:var(--muted);font-size:.85rem}.hint strong{color:var(--ink)}
+    .toast{position:fixed;z-index:30;left:50%;top:max(15px,env(safe-area-inset-top));transform:translate(-50%,-100px);padding:9px 17px;border-radius:999px;background:var(--ink);color:var(--panel);font-weight:900;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s}.toast.show{transform:translate(-50%,0);opacity:1}
+    .overlay{position:fixed;z-index:40;inset:0;display:grid;place-items:center;padding:18px;background:rgba(15,31,24,.65)}.overlay[hidden]{display:none}.modal{width:min(460px,100%);padding:clamp(22px,5vw,34px);border:3px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:26px;background:var(--panel);box-shadow:0 24px 65px rgba(0,0,0,.3);text-align:center}.modal .mini{font-size:4.2rem;line-height:1}.modal h1{margin:4px 0 10px;font:800 clamp(1.55rem,6vw,2.2rem)/1.05 "Baloo 2",sans-serif}.rules{display:grid;gap:8px;margin:15px 0 20px;padding:0;list-style:none;text-align:left}.rules li{padding:9px 11px;border-radius:13px;background:color-mix(in srgb,var(--grass) 17%,var(--panel));font-size:.9rem}.primary{border:0;border-radius:15px;padding:12px 24px;background:#f1773f;color:#fff;box-shadow:0 6px 0 #a94224;font:800 1.1rem "Baloo 2",sans-serif;cursor:pointer}.primary:active{transform:translateY(5px);box-shadow:0 1px 0 #a94224}
+    .coin-pop{position:fixed;z-index:25;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--coin);color:var(--coin-ink);border:2px solid rgba(90,55,0,.22);font-weight:900;pointer-events:none;animation:coinFly .85s ease forwards}
+    @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-25px)}70%{transform:translateX(-50%) translateY(-8px)}}
+    @keyframes shake{0%,100%{transform:translateX(-50%) rotate(0)}25%{transform:translateX(-50%) rotate(-5deg)}75%{transform:translateX(-50%) rotate(5deg)}}
+    @keyframes sceneBounce{0%,100%{transform:scale(1)}42%{transform:scale(1.025)}72%{transform:scale(1.01)}}
+    @keyframes sceneShake{0%,100%{transform:translateX(0) scale(1.01)}25%{transform:translateX(-6px) scale(1.01)}75%{transform:translateX(6px) scale(1.01)}}
+    @keyframes pulse{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 15%,transparent)}}
+    @keyframes coinFly{0%{opacity:1;transform:translate(-50%,-50%) scale(.65)}50%{transform:translate(-50%,-120%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-190%) scale(.8)}}
+    @media(max-width:700px){.game{padding-top:9px}.stage{min-height:360px;border-radius:21px}.scene-photo{object-position:46% center}.rumi-wrap{width:205px;height:230px;left:58%;bottom:30px}.friend{left:4%;width:105px;bottom:37px}.friend svg{width:82px;height:170px}.tree{right:5%;opacity:.8}.flowers{font-size:20px}.need-strip{grid-template-columns:1fr 1fr;gap:7px}.actions{grid-template-columns:1fr 1fr;gap:8px}.action:last-child{grid-column:1/-1}.action{min-height:66px}.action .aicon{display:inline-block;margin:0 7px 0 0;vertical-align:middle}.action .alabel{display:inline-block;vertical-align:middle}.speech{max-width:88%;top:13px}.modal{max-height:calc(100dvh - 24px);overflow:auto}.rules{gap:6px;margin:12px 0 17px}.rules li{padding:8px 10px}}
+    @media(max-width:380px){.stage{min-height:325px}.rumi-wrap{width:184px;height:205px}.friend svg{width:72px;height:150px}.counter{padding:6px 10px;font-size:.95rem}.sun{width:58px;height:58px}.need-head{font-size:.76rem}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="game" aria-label="Prendre soin de Rumi">
+    <section class="topline" aria-label="Score">
+      <div class="counter"><span class="coin" aria-hidden="true">★</span><span><span id="coins">20</span> pièces</span></div>
+      <div class="counter"><span aria-hidden="true">💚</span><span><span id="streak">0</span> soins</span></div>
+    </section>
+
+    <section class="stage" id="stage" aria-label="Rumi et son amie sorcière jouent dehors dans un jardin fleuri">
+      <img class="scene-photo" src="assets/media-generation-rumi-jardin-realiste-0-9ff05195-635a-462b-a70c-d77ac5798198.jpg" alt="Rumi, un chat sorcier blanc très poilu, avec son amie sorcière dans un jardin fleuri">
+      <div class="sun" aria-hidden="true"></div><div class="cloud" aria-hidden="true"></div><div class="tree" aria-hidden="true"></div><div class="bush" aria-hidden="true"></div><div class="path" aria-hidden="true"></div>
+      <div class="flowers" aria-hidden="true">🌼 🌷 🌻 🌸 🌺</div>
+      <div class="speech" id="speech" aria-live="polite">Bonjour !</div>
+
+      <div class="friend" aria-label="L’amie sorcière de Rumi">
+        <svg viewBox="0 0 120 220" role="img" aria-label="Une jeune sorcière amie de Rumi">
+          <path d="M59 5 18 77h85z" fill="#773fb0" stroke="#3f2367" stroke-width="5" stroke-linejoin="round"/><path d="M16 75q43 18 91 0" fill="none" stroke="#ffce46" stroke-width="11" stroke-linecap="round"/>
+          <circle cx="61" cy="101" r="31" fill="#a96b45" stroke="#553829" stroke-width="4"/><path d="M32 95q3-35 29-34 29 2 31 36-14-16-27-18-14 15-33 16" fill="#442a25"/>
+          <circle cx="50" cy="101" r="3.5" fill="#1d302a"/><circle cx="73" cy="101" r="3.5" fill="#1d302a"/><path d="M53 115q9 8 18 0" fill="none" stroke="#6c2f2c" stroke-width="3" stroke-linecap="round"/>
+          <path d="M29 205 38 127h46l10 78z" fill="#e95d82" stroke="#723044" stroke-width="4"/><path d="M45 128q16 20 32 0" fill="none" stroke="#ffca43" stroke-width="6"/><path d="M15 158q18-16 25 2M86 160q14-17 25-4" fill="none" stroke="#a96b45" stroke-width="9" stroke-linecap="round"/>
+          <path d="M98 146v62" stroke="#8b5b31" stroke-width="7"/><path d="m87 203 22-1 7 14H79z" fill="#efc446" stroke="#8b5b31" stroke-width="3"/>
+        </svg>
+        <span class="friend-name">Amie sorcière</span>
+      </div>
+
+      <div class="rumi-wrap" id="rumiWrap" aria-label="Rumi, le chat sorcier blanc très poilu">
+        <svg class="rumi" viewBox="0 0 255 285" role="img" aria-label="Rumi, un chat sorcier blanc très poilu">
+          <path class="hat" d="M68 76Q97 12 126 3q33 32 61 75-57 19-119-2Z"/><path class="band" d="M74 67q55 16 104 0l8 16Q127 101 67 82Z"/><path class="star" d="m130 39 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z"/>
+          <path class="fur" d="M48 133 30 105l35 7q17-26 62-26t63 27l35-8-18 31q12 19 7 51l15 23-25 2q-16 48-76 48-61 0-78-47l-25-3 16-23q-6-32 7-54Z"/>
+          <path class="shade" d="M49 199q24 39 78 39t80-41q-11 63-79 63-67 0-79-61Z"/>
+          <path class="fur" d="M64 113 45 92l31 10M190 113l20-21-32 10"/><ellipse class="eye" cx="93" cy="151" rx="13" ry="16"/><ellipse class="eye" cx="163" cy="151" rx="13" ry="16"/><ellipse class="pupil" cx="93" cy="151" rx="4" ry="10"/><ellipse class="pupil" cx="163" cy="151" rx="4" ry="10"/>
+          <path class="nose" d="m121 176 7-5 7 5-7 7Z"/><path class="mouth" d="M128 183q-8 10-18 2m18-2q8 10 18 2"/>
+          <path d="M79 174H40m39 10-42 7m139-17h39m-39 10 42 7" fill="none" stroke="#626c7a" stroke-width="3" stroke-linecap="round"/>
+          <ellipse class="dirt" cx="76" cy="205" rx="15" ry="9" transform="rotate(-18 76 205)"/><ellipse class="dirt" cx="177" cy="210" rx="14" ry="9" transform="rotate(20 177 210)"/><circle class="dirt" cx="124" cy="228" r="8"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="need-strip" aria-label="Besoins de Rumi">
+      <div class="need" data-need="food"><div class="need-head"><span class="need-name">🍎 Manger</span><span class="need-value">100</span></div><div class="need-bar" role="progressbar" aria-label="Manger" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="need-fill" style="--bar:#ee7658"></div></div></div>
+      <div class="need" data-need="water"><div class="need-head"><span class="need-name">💧 Boire</span><span class="need-value">100</span></div><div class="need-bar" role="progressbar" aria-label="Boire" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="need-fill" style="--bar:#3fa9d5"></div></div></div>
+      <div class="need" data-need="sleep"><div class="need-head"><span class="need-name">🌙 Dormir</span><span class="need-value">100</span></div><div class="need-bar" role="progressbar" aria-label="Dormir" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="need-fill" style="--bar:#758bd7"></div></div></div>
+      <div class="need" data-need="clean"><div class="need-head"><span class="need-name">🫧 Se laver</span><span class="need-value">100</span></div><div class="need-bar" role="progressbar" aria-label="Se laver" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="need-fill" style="--bar:#42b79d"></div></div></div>
+    </section>
+
+    <section class="actions" aria-label="Actions">
+      <button class="action" data-action="food" style="--bg:#ffc09d"><span class="aicon" aria-hidden="true">🍲</span><span class="alabel">Nourrir</span><span class="reward">+3 pièces</span></button>
+      <button class="action" data-action="water" style="--bg:#9dddf3"><span class="aicon" aria-hidden="true">🥤</span><span class="alabel">Donner à boire</span><span class="reward">+3 pièces</span></button>
+      <button class="action" data-action="sleep" style="--bg:#bccbf3"><span class="aicon" aria-hidden="true">🛏️</span><span class="alabel">Faire dormir</span><span class="reward">+3 pièces</span></button>
+      <button class="action" data-action="clean" style="--bg:#a8e5d3"><span class="aicon" aria-hidden="true">🛁</span><span class="alabel">Laver</span><span class="reward">+3 pièces</span></button>
+      <button class="action" data-action="play" style="--bg:#f6d66f"><span class="aicon" aria-hidden="true">🪀</span><span class="alabel">Jouer</span><span class="reward">avec son amie</span></button>
+    </section>
+
+    <section class="anger" aria-label="Barre pas content">
+      <div class="anger-label"><strong>Pas content</strong><span id="angerText">Tout va bien</span></div>
+      <div class="anger-track" id="angerTrack" role="progressbar" aria-label="Pas content" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="anger-fill" id="angerFill"></div></div>
+    </section>
+    <p class="hint" id="hint">Les 4 barres se vident en <strong>5 minutes</strong>.</p>
+  </main>
+
+  <div class="toast" id="toast" aria-live="assertive"></div>
+  <div class="overlay" id="startOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+      <div class="mini" aria-hidden="true">🐱‍👤</div>
+      <h1 id="startTitle">Prends soin de Rumi !</h1>
+      <ul class="rules">
+        <li>Les besoins se vident en <strong>5 minutes</strong>.</li>
+        <li>Un soin avant zéro donne <strong>3 pièces</strong>.</li>
+        <li>À zéro, tu perds des pièces.</li>
+        <li>« Pas content » plein en <strong>1 minute</strong> : toutes les pièces sont perdues.</li>
+      </ul>
+      <button class="primary" id="startBtn">Jouer</button>
+    </div>
+  </div>
+  <div class="overlay" id="angerOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="angerTitle">
+      <div class="mini" aria-hidden="true">😾</div><h1 id="angerTitle">Rumi est très fâché !</h1><p>Toutes tes pièces sont perdues.</p><button class="primary" id="continueBtn">Continuer</button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      "use strict";
+      var needs={food:100,water:100,sleep:100,clean:100};
+      var labels={food:"manger",water:"boire",sleep:"dormir",clean:"se laver"};
+      var replies={food:"Miam !",water:"Merci !",sleep:"Bonne nuit…",clean:"Tout propre !"};
+      var NEED_SECONDS=300;
+      var ANGER_SECONDS=60;
+      var coins=20,anger=0,streak=0,running=false,angerOpen=false,lastTick=Date.now(),lossClock=0,speechTimer,toastTimer;
+      var $=function(q){return document.querySelector(q)};
+      var $$=function(q){return Array.prototype.slice.call(document.querySelectorAll(q))};
+      var coinsEl=$("#coins"),streakEl=$("#streak"),angerFill=$("#angerFill"),angerTrack=$("#angerTrack"),angerText=$("#angerText"),rumi=$("#rumiWrap"),stage=$("#stage"),speech=$("#speech"),toast=$("#toast"),hint=$("#hint");
+      function clamp(n){return Math.max(0,Math.min(100,n))}
+      function say(text){clearTimeout(speechTimer);speech.textContent=text;speech.classList.add("show");speechTimer=setTimeout(function(){speech.classList.remove("show")},1400)}
+      function notify(text){clearTimeout(toastTimer);toast.textContent=text;toast.classList.add("show");toastTimer=setTimeout(function(){toast.classList.remove("show")},1400)}
+      function animate(type){var sceneClass=type==="bounce"?"scene-bounce":"scene-shake";stage.classList.remove("scene-bounce","scene-shake");void stage.offsetWidth;stage.classList.add(sceneClass);setTimeout(function(){stage.classList.remove(sceneClass)},700)}
+      function coinPop(button){var r=button.getBoundingClientRect(),p=document.createElement("span");p.className="coin-pop";p.textContent="+3";p.style.left=(r.left+r.width/2)+"px";p.style.top=r.top+"px";document.body.appendChild(p);setTimeout(function(){p.remove()},900)}
+      function care(type,button){if(!running||angerOpen)return;if(needs[type]>0){coins+=3;streak++;coinPop(button);notify("+3 pièces !")}needs[type]=100;anger=clamp(anger-12);say(replies[type]);animate("bounce");render()}
+      function play(){if(!running||angerOpen)return;anger=clamp(anger-5);say("On joue ensemble !");animate("bounce");render()}
+      function angry(){if(angerOpen)return;angerOpen=true;running=false;coins=0;streak=0;render();animate("shake");setTimeout(function(){$("#angerOverlay").hidden=false;$("#continueBtn").focus()},420)}
+      function render(){coinsEl.textContent=coins;streakEl.textContent=streak;angerFill.style.width=anger+"%";angerTrack.setAttribute("aria-valuenow",Math.round(anger));angerText.textContent=anger<1?"Tout va bien":anger<50?"Grognon":anger<80?"Attention !":"Très fâché !";
+        Object.keys(needs).forEach(function(key){var card=$('.need[data-need="'+key+'"]'),value=Math.round(needs[key]),bar=card.querySelector(".need-bar");card.querySelector(".need-value").textContent=value;card.querySelector(".need-fill").style.width=value+"%";card.classList.toggle("low",value<=20);bar.setAttribute("aria-valuenow",value);$('.action[data-action="'+key+'"]').setAttribute("aria-label",labels[key]+", niveau "+value+", donne 3 pièces")});
+        stage.classList.toggle("scene-dirty",needs.clean<35);stage.classList.toggle("scene-tired",needs.sleep<25);stage.classList.toggle("scene-critical",anger>78);
+        var lowest=Object.keys(needs).sort(function(a,b){return needs[a]-needs[b]})[0];
+        hint.innerHTML=needs[lowest]<=0?"Vite : il faut <strong>"+labels[lowest]+"</strong> !":needs[lowest]<=20?"Rumi a besoin de <strong>"+labels[lowest]+"</strong>.":"Les 4 barres se vident en <strong>5 minutes</strong>.";
+      }
+      function tick(){if(!running)return;var now=Date.now(),dt=Math.min(2,(now-lastTick)/1000);lastTick=now;var neglected=false;Object.keys(needs).forEach(function(key){needs[key]=clamp(needs[key]-(100/NEED_SECONDS)*dt);if(needs[key]<=0)neglected=true});
+        if(neglected){anger=clamp(anger+(100/ANGER_SECONDS)*dt);lossClock+=dt;if(lossClock>=5){lossClock-=5;if(coins>0){coins--;notify("-1 pièce")}animate("shake")}}else{lossClock=0}
+        render();if(anger>=100)angry()
+      }
+      $$('.action[data-action]:not([data-action="play"])').forEach(function(button){button.addEventListener("click",function(){care(button.getAttribute("data-action"),button)})});
+      $('.action[data-action="play"]').addEventListener("click",play);
+      $("#startBtn").addEventListener("click",function(){$("#startOverlay").hidden=true;running=true;lastTick=Date.now();say("À toi de jouer !")});
+      $("#continueBtn").addEventListener("click",function(){$("#angerOverlay").hidden=true;Object.keys(needs).forEach(function(key){needs[key]=Math.max(needs[key],25)});anger=0;angerOpen=false;running=true;lastTick=Date.now();say("Prends soin de moi !");render()});
+      render();setInterval(tick,500);
+    }());
+  </script>
+</body>
+</html>
